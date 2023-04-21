@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from Data.DataStructure import ConjuntoDados
 
 app = FastAPI()
 
@@ -20,3 +21,10 @@ class Notice(BaseModel):
 @app.post('/')
 async def classify(notice: Notice):
     return notice.notice
+
+@app.get('/newsletter')
+async def newsletter():
+    dados = ConjuntoDados()
+    dados.load_data()
+    return dados.transform_json()
+    
