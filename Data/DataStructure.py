@@ -2,7 +2,7 @@ from pymongo import MongoClient
 
 class MongoDBHandler:
     
-    def __init__(self, host = "0.0.0.0", port="27017", db_name="backendDb", collection_name="newsletter"):
+    def __init__(self, host = "0.0.0.0", port=27017, db_name="backendDb", collection_name="newsletter"):
         self.host = host
         self.port = port
         self.db_name = db_name
@@ -32,3 +32,4 @@ class MongoDBHandler:
             self.collection.insert_one(data)
         else:
             raise TypeError("Data must be a list or a dictionary")
+
