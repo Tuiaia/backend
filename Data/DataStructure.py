@@ -1,8 +1,10 @@
 from pymongo import MongoClient
+import json
+import redis
 
 class MongoDBHandler:
     
-    def __init__(self, host = "0.0.0.0", port=27017, db_name="backendDb", collection_name="newsletter"):
+    def __init__(self, host = "localhost", port=27017, db_name="backendDb", collection_name="newsletter"):
         self.host = host
         self.port = port
         self.db_name = db_name
@@ -10,6 +12,7 @@ class MongoDBHandler:
         self.client = None
         self.db = None
         self.collection = None
+        self.connect()
     
     def connect(self):
         self.client = MongoClient(host=self.host, port=self.port)
@@ -20,9 +23,9 @@ class MongoDBHandler:
         self.client.close()
     
     def load_data(self):
-        data = []
-        for doc in self.collection.find():
-            data.append(doc)
+        data = dict()
+        for count, doc in enumerate(self.collection.find()):
+            data[count] = str(doc)
         return data
     
     def save_data(self, data):
@@ -33,3 +36,21 @@ class MongoDBHandler:
         else:
             raise TypeError("Data must be a list or a dictionary")
 
+    def ScrapingHandler(self, message):
+        received_dict = json.loads(message['data'])
+        print(received_dict)
+        self.save_data(received_dict)
+
+    def Newsletter(self):
+        redis_conn = redis.Redis(host='localhost', port=6379)
+        p = redis_conn.pubsub()
+        p.subscribe(**{'canal_scraping': self.ScrapingHandler})
+        p.subscribe(**{'canal_newsletter' : self.newsletterHandler})
+        p.run_in_thread(sleep_time=0.001)
+
+    def newsletterHandler(self, message):
+        r = redis.Redis(host='localhost', port=6379)
+        r.publish('canal_newsletterData', json.dumps(self.load_data()))
+
+teste = MongoDBHandler()
+teste.Newsletter()
