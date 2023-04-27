@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 from bs4 import BeautifulSoup
 import requests
+import redis
+import json
 
 class Forbes:
     def get_urls(self):
@@ -25,7 +27,7 @@ class Forbes:
             list_font.append("Forbes")
             list_time.append(yesterday)
 
-        return [list_time, list_title, url, list_author, list_subtitle, list_font]
+        return {'data' : list_time, 'titulo' : list_title, 'url' : url, 'autor' : list_author, 'subtitulo' : list_subtitle, 'fonte' : list_font}
 
     def get_content(self, url):
         print(f"Acessando o link")
@@ -44,3 +46,7 @@ class Forbes:
             subtitle = ""
         return {'title' : title, 'author' : author, 'subtitle' : subtitle}
     
+    def run(self):
+        data = self.get_urls()
+        r = redis.Redis(host='localhost', port=6379, db=0)
+        r.publish('canal_scraping', json.dumps(data))

@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import date, timedelta
+import redis
+import json
 
 class BoraInvestir:
 
@@ -34,7 +36,8 @@ class BoraInvestir:
             list_url = list_url + url
             list_time = list_time + time
 
-        return [list_time, list_title, list_url, list_author, list_subtitle, list_font]
+        return {'data' : list_time, 'titulo' : list_title, 'url' : list_url, 'autor' : list_author, 'subtitulo' : list_subtitle, 'fonte' : list_font}
+
         
 
     def get_content(self, url):
@@ -53,3 +56,7 @@ class BoraInvestir:
             subtitle = ""
         return {'title' : title, 'author' : author, 'subtitle' : subtitle}
     
+    def run(self):
+        data = self.get_urls()
+        r = redis.Redis(host='localhost', port=6379, db=0)
+        r.publish('canal_scraping', json.dumps(data))
