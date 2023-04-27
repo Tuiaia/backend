@@ -1,9 +1,11 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from Data.DataStructure import ConjuntoDados
+import redis
+import json
 
 app = FastAPI()
+r = redis.Redis(host='localhost', port=6379)
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,7 +26,12 @@ async def classify(notice: Notice):
 
 @app.get('/newsletter')
 async def newsletter():
-    dados = ConjuntoDados()
-    dados.load_data()
-    return dados.transform_json()
-    
+    r.publish('canal_newsletter', "get_news")
+    pubsub = r.pubsub()
+    pubsub.subscribe('canal_newsletterData')
+    for message in pubsub.listen():
+        if message['data'] != 1:
+            try:
+                return json.loads(message['data'])
+            except:
+                pass
