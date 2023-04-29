@@ -26,12 +26,13 @@ async def classify(notice: Notice):
 
 @app.get('/newsletter')
 async def newsletter():
+
     r.publish('canal_newsletter', "get_news")
     pubsub = r.pubsub()
     pubsub.subscribe('canal_newsletterData')
     for message in pubsub.listen():
         if message['data'] != 1:
             try:
-                return json.loads(message['data'])
+                return [json.loads(x) for x in json.loads(message['data'])]
             except:
                 pass

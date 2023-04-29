@@ -1,6 +1,6 @@
 from pymongo import MongoClient
-import json
 import redis
+from bson.json_util import dumps, loads
 
 class MongoDBHandler:
     
@@ -23,10 +23,8 @@ class MongoDBHandler:
         self.client.close()
     
     def load_data(self):
-        data = dict()
-        for count, doc in enumerate(self.collection.find()):
-            data[count] = str(doc)
-        return data
+        for doc in self.collection.find():
+            yield dumps(doc)
     
     def save_data(self, data):
         if isinstance(data, list):
@@ -37,8 +35,7 @@ class MongoDBHandler:
             raise TypeError("Data must be a list or a dictionary")
 
     def ScrapingHandler(self, message):
-        received_dict = json.loads(message['data'])
-        print(received_dict)
+        received_dict = loads(message['data'])
         self.save_data(received_dict)
 
     def Newsletter(self):
@@ -50,7 +47,7 @@ class MongoDBHandler:
 
     def newsletterHandler(self, message):
         r = redis.Redis(host='localhost', port=6379)
-        r.publish('canal_newsletterData', json.dumps(self.load_data()))
+        r.publish('canal_newsletterData', dumps(self.load_data()))
 
 teste = MongoDBHandler()
 teste.Newsletter()
