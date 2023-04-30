@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  redis:
+    image: redis
+    restart: always
+    ports: 
+      - "6379:6379"
+    networks:
+      - data-network
+
+  mongo:
+    image: mongo
+    restart: always
+    ports: 
+      - "27017:27017"
+    networks:
+      - data-network
+
+  scraping:
+    build: ./Scraping
+    restart: always
+    depends_on:
+      - redis
+      - datahandler
+    networks:
+      - data-network
+
+  datahandler:
+    build: ./Data
+    restart: always
+    depends_on:
+      - redis
+      - mongo
+    networks:
+      - data-network
+
+  api:
+    build: ./app
+    restart: always
+    ports:
+      - "15400:15400"
+    depends_on:
+      - redis
+      - datahandler
+    networks:
+      - data-network
+
+
+networks:
+  data-network:

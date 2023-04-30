@@ -1,0 +1,4 @@
+FROM python:3.9.6
+COPY ./ /Data
+RUN pip3 install -r Data/requirements.txt
+CMD ["python", "Data/DataStructure.py"]

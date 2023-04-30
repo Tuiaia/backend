@@ -1,0 +1,4 @@
+FROM python:3.9.6
+COPY ./ /Scraping
+RUN pip3 install -r Scraping/requirements.txt
+CMD ["python", "Scraping/Scraper_tool.py"]
