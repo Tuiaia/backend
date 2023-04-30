@@ -2,9 +2,12 @@ from pymongo import MongoClient
 import redis
 from bson.json_util import dumps, loads
 
+
+r = redis.Redis(host='redis', port=6379)
+
 class MongoDBHandler:
     
-    def __init__(self, host = "localhost", port=27017, db_name="backendDb", collection_name="newsletter"):
+    def __init__(self, host = "mongo", port=27017, db_name="backendDb", collection_name="newsletter"):
         self.host = host
         self.port = port
         self.db_name = db_name
@@ -39,14 +42,12 @@ class MongoDBHandler:
         self.save_data(received_dict)
 
     def Newsletter(self):
-        redis_conn = redis.Redis(host='localhost', port=6379)
-        p = redis_conn.pubsub()
+        p = r.pubsub()
         p.subscribe(**{'canal_scraping': self.ScrapingHandler})
         p.subscribe(**{'canal_newsletter' : self.newsletterHandler})
         p.run_in_thread(sleep_time=0.001)
 
     def newsletterHandler(self, message):
-        r = redis.Redis(host='localhost', port=6379)
         r.publish('canal_newsletterData', dumps(self.load_data()))
 
 teste = MongoDBHandler()

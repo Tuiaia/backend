@@ -5,7 +5,7 @@ import redis
 import json
 
 app = FastAPI()
-r = redis.Redis(host='localhost', port=6379)
+r = redis.Redis(host='redis', port=6379)
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,6 +15,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+class classifyDTO(BaseModel):
+    classificacao: int
+    probabilidade: float
 
 class Notice(BaseModel):
     notice: str
@@ -23,6 +26,7 @@ class Notice(BaseModel):
 @app.post('/')
 async def classify(notice: Notice):
     return notice.notice
+
 
 @app.get('/newsletter')
 async def newsletter():
@@ -36,3 +40,4 @@ async def newsletter():
                 return [json.loads(x) for x in json.loads(message['data'])]
             except:
                 pass
+

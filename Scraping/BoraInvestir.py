@@ -4,12 +4,15 @@ from datetime import date, timedelta
 import redis
 import json
 
+r = redis.Redis(host='redis', port=6379, db=0)
+
+
 class BoraInvestir:
 
     def get_urls(self):
-        r = redis.Redis(host='localhost', port=6379, db=0)
         yesterday = date.today() - timedelta(days=1)
         yesterday = date.strftime(yesterday, "%Y-%m-%d")
+        urlDb = self.verify_url()
         for i in range(1, 5):
             response = requests.get(f'https://borainvestir.b3.com.br/noticias/page/{i}')
             response.raise_for_status()
@@ -18,15 +21,23 @@ class BoraInvestir:
             title = soup.find('section', class_='feed-vertical')
             url = title.find_all('a', class_='feed-vertical__item')
             time = title.find_all('time')
-            url = [x.get('href') for x in url]
-            time = [x.get('datetime') for x in time]
-            time = [x for x in time if x[:10] == yesterday]
-            url = url[:len(time)]
+            url = [x.get('href') for x in url if x.get('href') not in urlDb]
+            time = [x.get('datetime') for x in time[:len(url)]]
             for x, data in zip(url, time):
                 content = self.get_content(x, data)
                 r.publish('canal_scraping', json.dumps(content))
 
         
+    def verify_url(self):
+        r.publish('canal_newsletter', "get_news")
+        pubsub = r.pubsub()
+        pubsub.subscribe('canal_newsletterData')
+        for message in pubsub.listen():
+            if message['data'] != 1:
+                try:
+                    return [json.loads(x)['url'] for x in json.loads(message['data'])]
+                except:
+                    pass
 
     def get_content(self, url, data):
         print(f"Acessando o link")
