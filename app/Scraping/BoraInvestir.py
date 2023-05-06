@@ -1,17 +1,14 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import date, timedelta
+from datetime import datetime
 import redis
 import json
-
 r = redis.Redis(host='redis', port=6379, db=0)
 
 
 class BoraInvestir:
 
-    def get_urls(self):
-        yesterday = date.today() - timedelta(days=1)
-        yesterday = date.strftime(yesterday, "%Y-%m-%d")
+    def get_urls(self, message):
         urlDb = self.verify_url()
         for i in range(1, 5):
             response = requests.get(f'https://borainvestir.b3.com.br/noticias/page/{i}')
@@ -21,8 +18,9 @@ class BoraInvestir:
             title = soup.find('section', class_='feed-vertical')
             url = title.find_all('a', class_='feed-vertical__item')
             time = title.find_all('time')
+
             url = [x.get('href') for x in url if x.get('href') not in urlDb]
-            time = [x.get('datetime') for x in time[:len(url)]]
+            time = [x.get('datetime')[:10] for x in time[:len(url)]]
             for x, data in zip(url, time):
                 content = self.get_content(x, data)
                 r.publish('canal_scraping', json.dumps(content))
@@ -53,7 +51,9 @@ class BoraInvestir:
             subtitle = soup.find('h2', class_="page-content__subtitle").text
         except:
             subtitle = ""
-        return {'title' : title, 'author' : author, 'subtitle' : subtitle, 'url' : url, 'data' : data}
+        return {'title' : title, 'author' : author, 'subtitle' : subtitle, 'url' : url, 'data' : data, "fonte" : "B3"}
     
     def run(self):
-        self.get_urls()
+        p = r.pubsub()
+        p.subscribe(**{'canal_feed': self.get_urls})
+        p.run_in_thread(sleep_time=0.001)

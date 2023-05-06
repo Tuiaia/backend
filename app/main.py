@@ -3,9 +3,36 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import redis
 import json
+from app.Scraping.BoraInvestir import BoraInvestir
+from app.Scraping.Forbes import Forbes
+from app.DataStructure import MongoDBHandler
+from fastapi_utils.tasks import repeat_every
 
 app = FastAPI()
 r = redis.Redis(host='redis', port=6379)
+
+class classifyDTO(BaseModel):
+    classificacao: int
+    probabilidade: float
+
+class Notice(BaseModel):
+    notice: str
+
+@app.on_event("startup")
+@repeat_every(seconds = 10)
+def get_feed():
+    r.publish('canal_feed', 0)
+
+def get_mongodb(): 
+    teste = MongoDBHandler()
+    teste.Newsletter()
+
+def get_news():
+    Forbes().run()
+    BoraInvestir().run()
+
+get_mongodb()
+get_news()
 
 app.add_middleware(
     CORSMiddleware,
@@ -15,22 +42,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class classifyDTO(BaseModel):
-    classificacao: int
-    probabilidade: float
-
-class Notice(BaseModel):
-    notice: str
-
-
 @app.post('/')
 async def classify(notice: Notice):
     return notice.notice
 
-
 @app.get('/newsletter')
 async def newsletter():
-
     r.publish('canal_newsletter', "get_news")
     pubsub = r.pubsub()
     pubsub.subscribe('canal_newsletterData')
@@ -40,4 +57,3 @@ async def newsletter():
                 return [json.loads(x) for x in json.loads(message['data'])]
             except:
                 pass
-

@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from bs4 import BeautifulSoup
 import requests
 import redis
@@ -8,10 +8,11 @@ r = redis.Redis(host='redis', port=6379)
 
 
 class Forbes:
-    def get_urls(self):
+    def get_urls(self, message):
         urlDb = self.verify_url()
         today = date.today()
         todayUrl = date.strftime(today, "%Y/%m/%d")
+        dateSave = datetime.strftime(today, "%Y-%m-%d")
         response = requests.get(f'https://forbes.com.br/{todayUrl}')
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -19,7 +20,7 @@ class Forbes:
         url = title.find_all('a', class_='link-title-post-1')
         url = [x.get('href') for x in url if x.get('href') not in urlDb]
         for x in url:
-            content = self.get_content(x, todayUrl)
+            content = self.get_content(x, dateSave)
             r.publish('canal_scraping', json.dumps(content))
 
     def verify_url(self):
@@ -48,7 +49,9 @@ class Forbes:
             subtitle = soup.find('h2', class_="post__excerpt").text
         except:
             subtitle = ""
-        return {'title' : title, 'author' : author, 'subtitle' : subtitle, 'url' : url, 'data' : data}
+        return {'title' : title, 'author' : author, 'subtitle' : subtitle, 'url' : url, 'data' : data, "fonte" : "Forbes"}
     
     def run(self):
-        self.get_urls()
+        p = r.pubsub()
+        p.subscribe(**{'canal_feed': self.get_urls})
+        p.run_in_thread(sleep_time=0.001)

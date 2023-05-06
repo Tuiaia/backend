@@ -49,6 +49,3 @@ class MongoDBHandler:
 
     def newsletterHandler(self, message):
         r.publish('canal_newsletterData', dumps(self.load_data()))
-
-teste = MongoDBHandler()
-teste.Newsletter()

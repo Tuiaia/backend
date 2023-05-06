@@ -17,24 +17,6 @@ services:
     networks:
       - data-network
 
-  scraping:
-    build: ./Scraping
-    restart: always
-    depends_on:
-      - redis
-      - datahandler
-    networks:
-      - data-network
-
-  datahandler:
-    build: ./Data
-    restart: always
-    depends_on:
-      - redis
-      - mongo
-    networks:
-      - data-network
-
   api:
     build: ./app
     restart: always
@@ -42,10 +24,8 @@ services:
       - "15400:15400"
     depends_on:
       - redis
-      - datahandler
     networks:
       - data-network
-
 
 networks:
   data-network:
