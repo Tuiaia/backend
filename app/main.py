@@ -1,38 +1,26 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-import redis
-import json
-from app.Scraping.BoraInvestir import BoraInvestir
-from app.Scraping.Forbes import Forbes
-from app.DataStructure import MongoDBHandler
 from fastapi_utils.tasks import repeat_every
+from app.Utils.RedisConnection import redisConnection
+
+redis = redisConnection()
 
 app = FastAPI()
-r = redis.Redis(host='redis', port=6379)
-
-class classifyDTO(BaseModel):
-    classificacao: int
-    probabilidade: float
 
 class Notice(BaseModel):
     notice: str
 
 @app.on_event("startup")
-@repeat_every(seconds = 10)
+@repeat_every(seconds = 7200)
 def get_feed():
-    r.publish('canal_feed', 0)
+    redis.r.publish('canal_feed', 0)
 
-def get_mongodb(): 
-    teste = MongoDBHandler()
-    teste.Newsletter()
-
-def get_news():
-    Forbes().run()
-    BoraInvestir().run()
-
-get_mongodb()
-get_news()
+@app.on_event("startup")
+def run_connections():
+    redis.run_mongo()
+    redis.run_scraping()
+    redis.run_classifer()
 
 app.add_middleware(
     CORSMiddleware,
@@ -44,16 +32,11 @@ app.add_middleware(
 
 @app.post('/')
 async def classify(notice: Notice):
-    return notice.notice
+    return redis.get_classifier(notice.notice)
+
+
 
 @app.get('/newsletter')
 async def newsletter():
-    r.publish('canal_newsletter', "get_news")
-    pubsub = r.pubsub()
-    pubsub.subscribe('canal_newsletterData')
-    for message in pubsub.listen():
-        if message['data'] != 1:
-            try:
-                return [json.loads(x) for x in json.loads(message['data'])]
-            except:
-                pass
+    return redis.get_newsletter()
+    
