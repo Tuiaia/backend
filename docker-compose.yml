@@ -18,10 +18,15 @@ services:
       - data-network
 
   api:
-    build: ./app
+    build: ./
+    image: backend-api
+    container_name: backend-api
     restart: always
     ports:
-      - "15400:15400"
+      - "80:80"
+    environment:
+      - REDIS_HOST=redis
+      - MONGO_HOST=mongo
     depends_on:
       - redis
     networks:
