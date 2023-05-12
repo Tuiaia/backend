@@ -7,7 +7,7 @@ from string import punctuation
 from bson.json_util import dumps
 import json
 from app.Utils.RedisConnection import redisConnection
-
+from app.Utils.channelParameters import channel
 redis = redisConnection()
 
 class Classifier:
@@ -134,7 +134,7 @@ class Classifier:
         word_attributions = self.merge_subtokens(self.tokenizer, word_attributions)
         word_attributions = sorted(word_attributions, key=lambda x: (-x[1], x[0]))
         word_attributions = self.format_attributions(word_attributions)
-        redis.r.publish("classifyReceiver", dumps({
+        redis.r.publish(channel["classifyReceiver"], dumps({
             'prediction_index': int(self.cls_explainer.predicted_class_index),
             'prediction_probatility': f"{round(float(self.cls_explainer.pred_probs.numpy()*100), 2)}%",
             'influential_words': [x[0] for x in word_attributions]
