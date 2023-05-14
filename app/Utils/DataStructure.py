@@ -2,6 +2,8 @@ from pymongo import MongoClient
 from bson.json_util import dumps
 from dotenv import load_dotenv
 import os
+from datetime import datetime, timedelta
+
 load_dotenv()
 
 host = os.getenv("MONGO_HOST")
@@ -29,9 +31,14 @@ class ScrapingHandler(MongoDBHandler):
     def __init__(self, host = host, port=27017, db_name="backendDb", collection_name="newsletter"):
         super().__init__(host, port, db_name, collection_name)
 
-    def load_data(self):
-        for doc in self.collection.find():
-            yield dumps(doc)
+    def load_data(self, interval: dict):
+        inicio = datetime.strptime(interval['inicio'], "%d/%m/%Y").date()
+        fim = datetime.strptime(interval['fim'], "%d/%m/%Y").date()
+        delta = fim - inicio
+        for i in range(delta.days + 1):
+            dia = inicio + timedelta(days=i)
+            for doc in self.collection.find({'date' : dia.strftime("%d/%m/%Y")}):
+                yield dumps(doc)
     
     def save_data(self, data):
         if isinstance(data, list):
