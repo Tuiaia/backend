@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_utils.tasks import repeat_every
 from app.Utils.RedisConnection import redisConnection
 from app.Utils.channelParameters import channel
+from datetime import datetime
+
 redis = redisConnection()
 
 app = FastAPI()
@@ -12,7 +14,7 @@ class News(BaseModel):
     news: str
 
 @app.on_event("startup")
-@repeat_every(seconds = 7200)
+@repeat_every(seconds = 30)
 def get_feed():
     redis.r.publish(channel['forbes'], 0)
     redis.r.publish(channel['b3'], 0)
@@ -40,6 +42,6 @@ async def classify(news: News):
 
 
 @app.get('/feed')
-async def newsletter():
-    return redis.get_newsletter()
+async def newsletter(startdate: str = datetime.today().strftime("%d/%m/%Y"), enddate: str = datetime.today().strftime("%d/%m/%Y")):
+    return redis.get_newsletter({'inicio' :startdate, 'fim' : enddate})
     

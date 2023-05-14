@@ -9,7 +9,9 @@ redis = redisConnection()
 class Forbes:
     def get_urls(self, message):
         print("reading forbes")
-        urlDb = redis.get_newsletter()
+        inicio = (datetime.today() - timedelta(days=6)).strftime("%d/%m/%Y")
+        fim = (datetime.today()).strftime("%d/%m/%Y")
+        urlDb = redis.get_newsletter({'inicio' : inicio, 'fim' : fim})
         urlDb = [x['url'] for x in urlDb]
         today = date.today()
         todayUrl = date.strftime(today, "%Y/%m/%d")

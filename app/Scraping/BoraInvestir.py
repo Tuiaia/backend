@@ -4,13 +4,16 @@ import json
 from app.Utils.RedisConnection import redisConnection
 from datetime import datetime
 from app.Utils.channelParameters import channel
+from datetime import datetime, timedelta
 redis = redisConnection()
 
 class BoraInvestir:
 
     def get_urls(self, message):
+        inicio = (datetime.today() - timedelta(days=6)).strftime("%d/%m/%Y")
+        fim = (datetime.today()).strftime("%d/%m/%Y")
         print("reading b3")
-        urlDb = redis.get_newsletter()
+        urlDb = redis.get_newsletter({'inicio' : inicio, 'fim' : fim})
         urlDb = [x['url'] for x in urlDb]
         response = requests.get(f'https://borainvestir.b3.com.br/noticias/')
         response.raise_for_status()
