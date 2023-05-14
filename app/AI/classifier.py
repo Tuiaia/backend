@@ -125,8 +125,7 @@ class Classifier:
 
 
     def classify_text(self, input_text):
-        input_text = json.loads(input_text['data'])
-        print(input_text)
+        request_id, input_text = redis.separate_id_text(input_text['data'])
         input_text = self.remove_stopwords(input_text, language='portuguese')
         tokenized_input = self.tokenizer(input_text, truncation=True, max_length=100, return_tensors='pt')
         truncated_input_text = self.tokenizer.decode(tokenized_input['input_ids'][0])
@@ -134,7 +133,7 @@ class Classifier:
         word_attributions = self.merge_subtokens(self.tokenizer, word_attributions)
         word_attributions = sorted(word_attributions, key=lambda x: (-x[1], x[0]))
         word_attributions = self.format_attributions(word_attributions)
-        redis.r.publish(channel["classifyReceiver"], dumps({
+        redis.r.publish(request_id, dumps({
             'prediction_index': int(self.cls_explainer.predicted_class_index),
             'prediction_probatility': f"{round(float(self.cls_explainer.pred_probs.numpy()*100), 2)}%",
             'influential_words': [x[0] for x in word_attributions]

@@ -5,6 +5,7 @@ from app.Utils.DataStructure import ScrapingHandler
 from dotenv import load_dotenv
 import os
 from app.Utils.channelParameters import channel
+import uuid
 load_dotenv()
 
 host = os.getenv("REDIS_HOST")
@@ -14,24 +15,28 @@ class redisConnection:
         self.r = redis.Redis(host=host, port=port, db=0)
 
 
-    def get_newsletter(self):
-        self.r.publish(channel["feedTransmitter"], 0)
+    def get_newsletter(self, interval: dict):
+        request_id = str(uuid.uuid4())
+        self.r.publish(channel["feedTransmitter"], f"{request_id}:!&{dumps(interval)}")
         pubsub = self.r.pubsub()
-        pubsub.subscribe(channel["feedReceiver"])
+        pubsub.subscribe(request_id)
         for message in pubsub.listen():
             if message['data'] != 1:
                 try:
+                    pubsub.unsubscribe(request_id)
                     return [json.loads(x) for x in json.loads(message['data'])]
                 except:
                     pass
                 
     def get_classifier(self, notice: str):
-        self.r.publish(channel["classifyTransmitter"], dumps(notice))
+        request_id = str(uuid.uuid4())
+        self.r.publish(channel["classifyTransmitter"], f"{request_id}:!&{dumps(notice)}")
         pubsub = self.r.pubsub()
-        pubsub.subscribe(channel['classifyReceiver'])
+        pubsub.subscribe(request_id)
         for message in pubsub.listen():
             if message['data'] != 1:
                 try:
+                    pubsub.unsubscribe(request_id)
                     return json.loads(message['data'])
                 except:
                     pass
@@ -60,10 +65,13 @@ class redisConnection:
         p.run_in_thread(sleep_time=0.001)
 
     def newsletterHandler(self, message):
-        self.r.publish(channel['feedReceiver'], dumps(MongoScraping.load_data()))
+        request_id, text = self.separate_id_text(message['data'])
+        self.r.publish(request_id, dumps(MongoScraping.load_data(text)))
 
     def ScrapingHandler(self, message):
         received_dict = loads(message['data'])
         MongoScraping.save_data(received_dict)
 
-    
+    def separate_id_text(self, rawText):
+        text = rawText.split(b":!&")
+        return text[0].decode('UTF-8'), json.loads(text[1])
