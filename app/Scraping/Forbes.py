@@ -4,12 +4,13 @@ import requests
 import json
 from app.Utils.RedisConnection import redisConnection
 from app.Utils.channelParameters import channel
+
 redis = redisConnection()
 
 class Forbes:
     def get_urls(self, message):
         print("reading forbes")
-        inicio = (datetime.today() - timedelta(days=6)).strftime("%d/%m/%Y")
+        inicio = (datetime.today() - timedelta(days=365)).strftime("%d/%m/%Y")
         fim = (datetime.today()).strftime("%d/%m/%Y")
         urlDb = redis.get_newsletter({'inicio' : inicio, 'fim' : fim})
         urlDb = [x['url'] for x in urlDb]
@@ -23,7 +24,8 @@ class Forbes:
         url = [x.get('href') for x in url if x.get('href') not in urlDb]
         for x in url:
             content = self.get_content(x, dateSave)
-            content['classification'] = redis.get_classifier(content['title'])
+            content['classification'] = redis.get_feedClassifier(content['title'])
+            content['language'] = "ptbr"
             redis.r.publish(channel['saveData'], json.dumps(content))
 
     def get_content(self, url, data):
