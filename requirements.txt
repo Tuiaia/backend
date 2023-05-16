@@ -12,3 +12,6 @@ langdetect==1.0.9
 transformers==4.28.1
 transformers-interpret==0.10.0
 python-dotenv==1.0.0
+wordcloud>=1.9.1.1
+matplotlib>=3.7.1
+Pillow>=9.5.0
