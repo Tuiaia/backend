@@ -26,6 +26,7 @@ class News(BaseModel):
 def get_feed():
     redis.r.publish(channel['forbes'], 0)
     redis.r.publish(channel['b3'], 0)
+    redis.r.publish(channel['googleNews'], 0)
 
 
 @app.on_event("startup")
@@ -33,6 +34,7 @@ def run_connections():
     redis.run_mongo()
     redis.run_scraping()
     redis.run_classifer()
+    redis.run_feedclassifer()
 
 
 app.add_middleware(
