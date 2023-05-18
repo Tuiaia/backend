@@ -18,8 +18,8 @@ class WordCloudGenerator:
         nltk.download('punkt')
         nltk.download('stopwords')
         self.stop_words = stopwords.words('english') + stopwords.words('portuguese')
-        self.stop_words.append("U")
-        self.stop_words.append("R")
+        unusable_words = ["U", "R", "diz", "say", "says", "new", "veja", "milhões", "preço", "preços"]
+        self.stop_words.extend(unusable_words)
         self.pallette = ['#509B9E', '#38B6FF', '#48B091', '#01003B', '#04346D', '#2F6D51', '#44A2CB']
         self.width = 800
         self.height = 800
