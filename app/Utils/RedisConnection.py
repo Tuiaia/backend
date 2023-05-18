@@ -10,7 +10,6 @@ load_dotenv()
 
 host = os.getenv("REDIS_HOST")
 MongoScraping = ScrapingHandler()
-MongoScraping.collection.drop()
 class redisConnection:
     def __init__(self, host = host, port = 6379):
         self.r = redis.Redis(host=host, port=port, db=0)
