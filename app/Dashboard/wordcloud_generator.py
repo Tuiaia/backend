@@ -18,6 +18,8 @@ class WordCloudGenerator:
         nltk.download('punkt')
         nltk.download('stopwords')
         self.stop_words = stopwords.words('english') + stopwords.words('portuguese')
+        self.stop_words.append("U")
+        self.stop_words.append("R")
         self.pallette = ['#509B9E', '#38B6FF', '#48B091', '#01003B', '#04346D', '#2F6D51', '#44A2CB']
         self.width = 800
         self.height = 800
@@ -50,10 +52,21 @@ class WordCloudGenerator:
         plt.imshow(wordcloud)
         plt.axis("off")
         plt.tight_layout(pad=0)
-        wordcloud.to_file('wc.png')
 
         plt_image = self.plt_to_image()
         byte_arr = io.BytesIO()
         plt_image.save(byte_arr, format='PNG')
         byte_arr = byte_arr.getvalue()
         return byte_arr
+    
+    def get_bar_graph(self, text):
+        text = WordCloud(stopwords=self.stop_words).process_text(text)
+        text = dict(sorted(text.items(), key=lambda x:x[1], reverse=True))
+        plt.figure(figsize=(8, 8), facecolor=None)
+        plt.bar(list(text.keys())[:5], list(text.values())[:5], color='tab:blue')
+        plt.show(block=True)
+        plt.tight_layout(pad=0)
+        plt_image = self.plt_to_image()
+        image_bytes = io.BytesIO()
+        plt_image.save(image_bytes, format='PNG')
+        return image_bytes.getvalue()

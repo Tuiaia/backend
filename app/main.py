@@ -9,7 +9,6 @@ from fastapi.responses import StreamingResponse
 from app.Dashboard.wordcloud_generator import WordCloudGenerator
 import io
 
-
 redis = redisConnection()
 
 app = FastAPI()
@@ -60,10 +59,18 @@ async def newsletter(startdate: str = datetime.today().strftime("%d/%m/%Y"),
 @app.get('/wordcloud', response_class=StreamingResponse)
 async def get_wordcloud(startdate: str = datetime.today().strftime("%d/%m/%Y"),
                         enddate: str = datetime.today().strftime("%d/%m/%Y")):
-    news = await redis.get_newsletter({'inicio': startdate, 'fim': enddate})
-
-    text = ' '.join(news)  # TODO: adaptar para concatenar todos os textos das notícias
+    news = redis.get_newsletter({'inicio': startdate, 'fim': enddate})
+    news_text = [x['title'] for x in news]
+    text = ' '.join(news_text)  # TODO: adaptar para concatenar todos os textos das notícias
     wordcloud = wordcloud_generator.generate_wordcloud(text)
     image_bytes = wordcloud_generator.get_wordcloud_image(wordcloud)
 
     return StreamingResponse(io.BytesIO(image_bytes), media_type="image/png")
+
+@app.get('/barwordcloud', response_class=StreamingResponse)
+async def get_wordcloud(startdate: str = datetime.today().strftime("%d/%m/%Y"),
+                        enddate: str = datetime.today().strftime("%d/%m/%Y")):
+    news = redis.get_newsletter({'inicio': startdate, 'fim': enddate})
+    news_text = [x['title'] for x in news]
+    text = ' '.join(news_text)  # TODO: adaptar para concatenar todos os textos das notícias
+    return StreamingResponse(io.BytesIO(wordcloud_generator.get_bar_graph(text)), media_type="image/png")
