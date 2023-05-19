@@ -15,39 +15,60 @@ class RandomColorFunc(object):
 
 class WordCloudGenerator:
     def __init__(self):
+        # Download necessary NLTK resources
         nltk.download('punkt')
         nltk.download('stopwords')
+
+        # Define stop words in English and Portuguese
         self.stop_words = stopwords.words('english') + stopwords.words('portuguese')
+
+        # Define additional unusable words
         unusable_words = ["U", "R", "diz", "say", "says", "new", "veja", "milhões", "preço", "preços"]
+
+        # Extend stop words with additional unusable words
         self.stop_words.extend(unusable_words)
-        self.pallette = ['#509B9E', '#38B6FF', '#48B091', '#01003B', '#04346D', '#2F6D51', '#44A2CB']
+
+        # Define color palette for wordcloud
+        self.palette = ['#509B9E', '#38B6FF', '#48B091', '#01003B', '#04346D', '#2F6D51', '#44A2CB']
+
+        # Define wordcloud dimensions
         self.width = 800
         self.height = 800
+
+        # Define background color of wordcloud
         self.background_color = 'white'
+
+        # Define random seed for wordcloud generation
         self.seed = 42
 
     def generate_wordcloud(self, text):
-        wordcloud = WordCloud(width=self.width,
-                              height=self.height,
-                              background_color=self.background_color,
-                              stopwords=self.stop_words,
-                              min_font_size=10,
-                              random_state=self.seed,
-                              prefer_horizontal=1).generate(text)
+        # Generate wordcloud
+        wordcloud = WordCloud(
+            width=self.width,
+            height=self.height,
+            background_color=self.background_color,
+            stopwords=self.stop_words,
+            min_font_size=10,
+            random_state=self.seed,
+            prefer_horizontal=1
+        ).generate(text)
 
-        color_func = RandomColorFunc(self.pallette)
+        # Define custom color function for wordcloud
+        color_func = RandomColorFunc(self.palette)
         wordcloud.recolor(color_func=color_func)
 
         return wordcloud
 
     def plt_to_image(self):
+        # Convert matplotlib plot to image
         buf = io.BytesIO()
         plt.savefig(buf, format='png')
         buf.seek(0)
         image = Image.open(buf)
         return image
 
-    def get_wordcloud_image(self, wordcloud: WordCloud):
+    def get_wordcloud_image(self, wordcloud):
+        # Generate and retrieve wordcloud image as bytes
         plt.figure(figsize=(8, 8), facecolor=None)
         plt.imshow(wordcloud)
         plt.axis("off")
@@ -60,13 +81,17 @@ class WordCloudGenerator:
         return byte_arr
     
     def get_bar_graph(self, text):
+        # Generate bar graph of word frequencies
         text = WordCloud(stopwords=self.stop_words).process_text(text)
-        text = dict(sorted(text.items(), key=lambda x:x[1], reverse=True))
+        text = dict(sorted(text.items(), key=lambda x: x[1], reverse=True))
+
         plt.figure(figsize=(8, 8), facecolor=None)
         plt.bar(list(text.keys())[:5], list(text.values())[:5], color='tab:blue')
         plt.show(block=True)
         plt.tight_layout(pad=0)
+
         plt_image = self.plt_to_image()
         image_bytes = io.BytesIO()
         plt_image.save(image_bytes, format='PNG')
+
         return image_bytes.getvalue()
