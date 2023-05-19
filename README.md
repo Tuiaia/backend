@@ -1,4 +1,9 @@
-# Documentação da API Tuiaia 
+
+# API Tuiaia 
+<p align="center">
+<a href = "https://github.com/Tuiaia/backend/tree/main">
+<img src="images_example/Tuiaia.svg" width="40%" height="40%"/></a>
+</p>
 A API Tuiaia é uma ferramenta para classificar dados financeiros. Ela utiliza técnicas de aprendizado de máquina para analisar e categorizar informações financeiras, dividindo-as em sentimento, magnitude e impacto temporal, nesta ordem. Para executar a API, é necessário ter o MongoDB e o Redis instalados no seu sistema. Este documento fornece instruções sobre como instalar as dependências necessárias e como usar a API Tuiaia de forma eficiente.
 ## Instalação
 Antes de executar a API Tuiaia, certifique-se de ter o MongoDB e o Redis instalados. Siga as instruções abaixo para instalar essas dependências:
