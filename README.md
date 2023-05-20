@@ -47,7 +47,7 @@ docker-compose up -d --build
 
 Aguarde até que os contêineres sejam criados e iniciados.
 
-# Pontos de extremidade da API
+# Endpoint da API
 
 A API Tuiaia oferece os seguintes pontos de extremidade para interagir com o serviço de classificação de dados financeiros:
 
